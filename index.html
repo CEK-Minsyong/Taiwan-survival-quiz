@@ -346,6 +346,7 @@ let lineUser = {
 
 let answerLogs = [];
 let resultSent = false;
+let liffReadyPromise = null;
 
 const questionBank = [
 
@@ -427,7 +428,9 @@ function shuffle(array) {
   return [...array].sort(() => Math.random() - 0.5);
 }
 
-window.addEventListener("load", initLiff);
+window.addEventListener("load", function() {
+  liffReadyPromise = initLiff();
+});
 
 async function initLiff() {
   try {
@@ -460,7 +463,11 @@ async function initLiff() {
   }
 }
   
-function startGame() {
+async function startGame() {
+
+  if (liffReadyPromise) {
+    await liffReadyPromise;
+  }
 
   questions = shuffle(questionBank).slice(0, QUESTION_COUNT);
 
@@ -549,14 +556,15 @@ function selectAnswer(index,btn){
 
   const q = questions[currentQuestion];
 
-  const allButtons = document.querySelectorAll(".option");
-  answerLogs.push({
+answerLogs.push({
   question: q.question,
   selectedText: q.options[index],
   correctText: q.options[q.answer],
   isCorrect: index === q.answer,
   category: q.category
 });
+
+const allButtons = document.querySelectorAll(".option");
 
   allButtons.forEach((button,i)=>{
 
@@ -658,7 +666,6 @@ function restartGame(){
 
 function sendResultToSheet(resultTitle, resultText) {
   if (resultSent) return;
-  resultSent = true;
 
   const payload = {
     activityName: "台灣人生存測驗",
@@ -678,13 +685,8 @@ function sendResultToSheet(resultTitle, resultText) {
 
   const data = JSON.stringify(payload);
 
-  if (navigator.sendBeacon) {
-    const blob = new Blob([data], {
-      type: "text/plain;charset=utf-8"
-    });
-    navigator.sendBeacon(GAS_WEB_APP_URL, blob);
-  } else {
-    fetch(GAS_WEB_APP_URL, {
+  function sendByFetch() {
+    return fetch(GAS_WEB_APP_URL, {
       method: "POST",
       mode: "no-cors",
       headers: {
@@ -693,7 +695,28 @@ function sendResultToSheet(resultTitle, resultText) {
       body: data
     });
   }
-}  
+
+  if (navigator.sendBeacon) {
+    const blob = new Blob([data], {
+      type: "text/plain;charset=utf-8"
+    });
+
+    const beaconSuccess = navigator.sendBeacon(GAS_WEB_APP_URL, blob);
+
+    if (beaconSuccess) {
+      resultSent = true;
+      return;
+    }
+  }
+
+  sendByFetch()
+    .then(function() {
+      resultSent = true;
+    })
+    .catch(function(error) {
+      console.log("資料送出失敗：", error);
+    });
+}
   
 </script>
 
