@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>台灣人生存測驗</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a, #f97316);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      background: #f8fafc;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,.3);
+    }
+
+    .header {
+      background: #111827;
+      color: white;
+      text-align: center;
+      padding: 24px 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin-top: 10px;
+      line-height: 1.7;
+      opacity: .9;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .emoji {
+      font-size: 64px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin-top: 0;
+      line-height: 1.5;
+    }
+
+    .desc {
+      color: #64748b;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .info-box {
+      background: #f1f5f9;
+      border-radius: 18px;
+      padding: 14px;
+      margin: 18px 0;
+      line-height: 1.8;
+      font-size: 14px;
+      color: #334155;
+      text-align: left;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    button:active {
+      transform: scale(.98);
+    }
+
+    .primary {
+      background: #f97316;
+      color: white;
+    }
+
+    .secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+      margin-top: 10px;
+    }
+
+    .question-category {
+      display: inline-block;
+      background: #fff7ed;
+      color: #c2410c;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .question-text {
+      font-size: 22px;
+      font-weight: bold;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .option {
+      background: #f1f5f9;
+      color: #111827;
+      text-align: left;
+      margin-bottom: 10px;
+      border: 2px solid transparent;
+      line-height: 1.6;
+    }
+
+    .correct {
+      background: #dcfce7;
+      border-color: #22c55e;
+      color: #166534;
+    }
+
+    .wrong {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+
+    .feedback {
+      margin-top: 14px;
+      border-radius: 18px;
+      padding: 14px;
+      line-height: 1.8;
+      font-size: 14px;
+      display: none;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback.correct-box {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .feedback.wrong-box {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #475569;
+    }
+
+    .timer {
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .result-badge {
+      background: linear-gradient(135deg, #f97316, #facc15);
+      border-radius: 24px;
+      padding: 22px;
+      color: white;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .result-badge .emoji {
+      font-size: 56px;
+      margin-bottom: 10px;
+    }
+
+    .result-badge h3 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .result-text {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 18px;
+      padding: 14px;
+      line-height: 1.8;
+      font-size: 14px;
+      color: #334155;
+      margin-bottom: 14px;
+      white-space: pre-line;
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <h1>台灣人生存測驗</h1>
+    <p>
+      你以為只是日常，<br>
+      其實很多人每天都在默默踩坑。
+    </p>
+  </div>
+
+  <div class="content">
+
+    <!-- 開始畫面 -->
+    <div id="startScreen" class="card center">
+
+      <div class="emoji">🧠⚡</div>
+
+      <h2>
+        你能避開幾個<br>
+        台灣日常陷阱？
+      </h2>
+
+      <div class="desc">
+        職場、租屋、詐騙、友情、網路。<br>
+        每一題都像生活小事，<br>
+        但選錯可能直接進人生副本。
+      </div>
+
+      <div class="info-box">
+        <strong>玩法：</strong><br>
+        ・隨機 5 題<br>
+        ・限時 45 秒<br>
+        ・測出你的社會生存段位
+      </div>
+
+      <button class="primary" onclick="startGame()">
+        開始挑戰
+      </button>
+
+    </div>
+
+    <!-- 遊戲畫面 -->
+    <div id="quizScreen" class="card hidden">
+
+      <div class="top-row">
+        <span id="progress">第 1 / 5 題</span>
+        <span class="timer">剩餘 <span id="time">45</span> 秒</span>
+      </div>
+
+      <div id="category" class="question-category"></div>
+
+      <div id="question" class="question-text"></div>
+
+      <div id="options"></div>
+
+      <div id="feedback" class="feedback"></div>
+
+      <button id="nextBtn" class="primary hidden" onclick="nextQuestion()">
+        下一題
+      </button>
+
+    </div>
+
+    <!-- 結果畫面 -->
+    <div id="resultScreen" class="card hidden center">
+
+      <h2>你的生存段位</h2>
+
+      <div class="result-badge">
+
+        <div id="resultEmoji" class="emoji">🛡️</div>
+
+        <h3 id="resultTitle">台灣防坑大師</h3>
+
+        <p id="resultScore">答對 0 / 5 題</p>
+
+      </div>
+
+      <div id="resultText" class="result-text"></div>
+
+      <button class="primary" onclick="restartGame()">
+        再玩一次
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const QUESTION_COUNT = 5;
+const TOTAL_TIME = 45;
+
+const questionBank = [
+
+{
+  category: "💼 職場篇",
+  question: "主管晚上11點傳LINE：『明天簡報幫我順一下。』哪個說法比較合理？",
+  options: [
+    "沒打卡就不算加班",
+    "仍可能涉及工時與加班問題",
+    "LINE訊息不算正式工作"
+  ],
+  answer: 1,
+  trap: "免費加班陷阱",
+  explain: "很多人以為沒打卡就不算加班，但若公司有實際工作要求，仍可能涉及工時問題。"
+},
+
+{
+  category: "💳 友情篇",
+  question: "朋友說：『帳戶借我收一下錢，真的很急。』哪個反應比較安全？",
+  options: [
+    "只是幫朋友問題不大",
+    "出借帳戶可能涉及法律風險",
+    "沒抽成就不會有事"
+  ],
+  answer: 1,
+  trap: "人頭帳戶危機",
+  explain: "很多詐騙都從『只是幫個忙』開始。"
+},
+
+{
+  category: "🏠 租屋篇",
+  question: "房東說：『你不在沒關係，我等等進去看冷氣。』哪個說法比較合理？",
+  options: [
+    "房東有鑰匙就能自由進出",
+    "房客仍有基本隱私與使用權利",
+    "提前通知就一定能進房"
+  ],
+  answer: 1,
+  trap: "租屋驚魂事件",
+  explain: "租屋期間，房客仍有居住與隱私權益。"
+},
+
+{
+  category: "📱 網路篇",
+  question: "你在社群影射同事，但沒有寫名字。哪個說法比較合理？",
+  options: [
+    "沒寫名字就一定沒事",
+    "若能辨識對象仍可能有爭議",
+    "私人帳號不受法律影響"
+  ],
+  answer: 1,
+  trap: "沒點名但大家都知道",
+  explain: "網路發言也可能看是否足以辨識對象。"
+},
+
+{
+  category: "🚗 交通篇",
+  question: "朋友喝酒後說：『我很清醒，借我車一下。』哪個反應比較合理？",
+  options: [
+    "有駕照就能借",
+    "借車仍可能讓車主承擔風險",
+    "出事與車主無關"
+  ],
+  answer: 1,
+  trap: "朋友一句我很清醒",
+  explain: "酒後借車非常危險。"
+}
+
+];
+
+let questions = [];
+let currentQuestion = 0;
+let score = 0;
+let timeLeft = TOTAL_TIME;
+let timer = null;
+let answered = false;
+
+function shuffle(array) {
+  return [...array].sort(() => Math.random() - 0.5);
+}
+
+function startGame() {
+
+  questions = shuffle(questionBank).slice(0, QUESTION_COUNT);
+
+  currentQuestion = 0;
+  score = 0;
+  timeLeft = TOTAL_TIME;
+
+  document.getElementById("startScreen").classList.add("hidden");
+  document.getElementById("resultScreen").classList.add("hidden");
+  document.getElementById("quizScreen").classList.remove("hidden");
+
+  startTimer();
+
+  renderQuestion();
+
+}
+
+function startTimer() {
+
+  clearInterval(timer);
+
+  document.getElementById("time").textContent = timeLeft;
+
+  timer = setInterval(() => {
+
+    timeLeft--;
+
+    document.getElementById("time").textContent = timeLeft;
+
+    if(timeLeft <= 0){
+      showResult();
+    }
+
+  },1000);
+
+}
+
+function renderQuestion(){
+
+  answered = false;
+
+  const q = questions[currentQuestion];
+
+  document.getElementById("progress").textContent =
+    `第 ${currentQuestion + 1} / ${questions.length} 題`;
+
+  document.getElementById("category").textContent = q.category;
+
+  document.getElementById("question").textContent = q.question;
+
+  document.getElementById("nextBtn").classList.add("hidden");
+
+  const feedback = document.getElementById("feedback");
+
+  feedback.className = "feedback";
+
+  feedback.textContent = "";
+
+  const optionsBox = document.getElementById("options");
+
+  optionsBox.innerHTML = "";
+
+  q.options.forEach((option,index)=>{
+
+    const btn = document.createElement("button");
+
+    btn.className = "option";
+
+    btn.textContent = `${index + 1}. ${option}`;
+
+    btn.onclick = ()=> selectAnswer(index,btn);
+
+    optionsBox.appendChild(btn);
+
+  });
+
+}
+
+function selectAnswer(index,btn){
+
+  if(answered) return;
+
+  answered = true;
+
+  const q = questions[currentQuestion];
+
+  const allButtons = document.querySelectorAll(".option");
+
+  allButtons.forEach((button,i)=>{
+
+    button.disabled = true;
+
+    if(i === q.answer){
+      button.classList.add("correct");
+    }
+
+  });
+
+  const feedback = document.getElementById("feedback");
+
+  if(index === q.answer){
+
+    score++;
+
+    feedback.className = "feedback show correct-box";
+
+    feedback.innerHTML =
+      `<strong>你避開了：${q.trap}</strong><br><br>${q.explain}`;
+
+  }else{
+
+    btn.classList.add("wrong");
+
+    feedback.className = "feedback show wrong-box";
+
+    feedback.innerHTML =
+      `<strong>你踩到了：${q.trap}</strong><br><br>${q.explain}`;
+
+  }
+
+  if(currentQuestion < questions.length - 1){
+
+    document.getElementById("nextBtn").classList.remove("hidden");
+
+  }else{
+
+    setTimeout(showResult,1000);
+
+  }
+
+}
+
+function nextQuestion(){
+
+  currentQuestion++;
+
+  renderQuestion();
+
+}
+
+function showResult(){
+
+  clearInterval(timer);
+
+  document.getElementById("quizScreen").classList.add("hidden");
+
+  document.getElementById("resultScreen").classList.remove("hidden");
+
+  document.getElementById("resultScore").textContent =
+    `答對 ${score} / ${questions.length} 題`;
+
+  let emoji = "🫠";
+  let title = "高危險韭菜體質";
+  let text = "看到『只是幫忙』『大家都這樣』時，請先停三秒。";
+
+  if(score >= 5){
+
+    emoji = "🛡️";
+    title = "台灣防坑大師";
+    text = "你對台灣社會陷阱非常敏感，很多話術騙不到你。";
+
+  }else if(score >= 3){
+
+    emoji = "🦊";
+    title = "半熟防坑玩家";
+    text = "你有基本警覺，但偶爾還是可能被人情或話術影響。";
+
+  }
+
+  document.getElementById("resultEmoji").textContent = emoji;
+
+  document.getElementById("resultTitle").textContent = title;
+
+  document.getElementById("resultText").textContent = text;
+
+}
+
+function restartGame(){
+
+  document.getElementById("resultScreen").classList.add("hidden");
+
+  document.getElementById("startScreen").classList.remove("hidden");
+
+}
+
+</script>
+
+</body>
+</html>
