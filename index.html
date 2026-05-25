@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>台灣人生存測驗</title>
-
+  
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  
   <style>
     * {
       box-sizing: border-box;
@@ -330,6 +332,21 @@
 const QUESTION_COUNT = 5;
 const TOTAL_TIME = 45;
 
+// 你的 LIFF ID
+const LIFF_ID = "2010185872-O4NGSxlK";
+
+// 你的 Google Apps Script Web App URL
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx9FF670yBFw7NFzO-HFL_Uqs-s8CbW6H3sExNYGw3nVn2g8S-0MSo0VWqJVp2f5nI/exec";
+
+let lineUser = {
+  userId: "",
+  displayName: "訪客",
+  pictureUrl: ""
+};
+
+let answerLogs = [];
+let resultSent = false;
+
 const questionBank = [
 
 {
@@ -410,6 +427,39 @@ function shuffle(array) {
   return [...array].sort(() => Math.random() - 0.5);
 }
 
+window.addEventListener("load", initLiff);
+
+async function initLiff() {
+  try {
+    if (typeof liff === "undefined") {
+      console.log("LIFF SDK 尚未載入，使用訪客模式");
+      return;
+    }
+
+    await liff.init({
+      liffId: LIFF_ID
+    });
+
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+
+    const profile = await liff.getProfile();
+
+    lineUser = {
+      userId: profile.userId || "",
+      displayName: profile.displayName || "LINE 使用者",
+      pictureUrl: profile.pictureUrl || ""
+    };
+
+    console.log("LINE 使用者資料：", lineUser);
+
+  } catch (error) {
+    console.log("LIFF 初始化失敗：", error);
+  }
+}
+  
 function startGame() {
 
   questions = shuffle(questionBank).slice(0, QUESTION_COUNT);
@@ -417,6 +467,8 @@ function startGame() {
   currentQuestion = 0;
   score = 0;
   timeLeft = TOTAL_TIME;
+  answerLogs = [];
+  resultSent = false;
 
   document.getElementById("startScreen").classList.add("hidden");
   document.getElementById("resultScreen").classList.add("hidden");
@@ -498,6 +550,13 @@ function selectAnswer(index,btn){
   const q = questions[currentQuestion];
 
   const allButtons = document.querySelectorAll(".option");
+  answerLogs.push({
+  question: q.question,
+  selectedText: q.options[index],
+  correctText: q.options[q.answer],
+  isCorrect: index === q.answer,
+  category: q.category
+});
 
   allButtons.forEach((button,i)=>{
 
@@ -586,6 +645,7 @@ function showResult(){
 
   document.getElementById("resultText").textContent = text;
 
+  sendResultToSheet(title, text);
 }
 
 function restartGame(){
@@ -596,6 +656,45 @@ function restartGame(){
 
 }
 
+function sendResultToSheet(resultTitle, resultText) {
+  if (resultSent) return;
+  resultSent = true;
+
+  const payload = {
+    activityName: "台灣人生存測驗",
+    userName: lineUser.displayName,
+    userId: lineUser.userId,
+    score: score,
+    total: questions.length,
+    resultTitle: resultTitle,
+    resultText: resultText,
+    clickedLead: false,
+    source: "LIFF",
+    userAgent: navigator.userAgent,
+    answers: answerLogs
+  };
+
+  console.log("準備送出資料：", payload);
+
+  const data = JSON.stringify(payload);
+
+  if (navigator.sendBeacon) {
+    const blob = new Blob([data], {
+      type: "text/plain;charset=utf-8"
+    });
+    navigator.sendBeacon(GAS_WEB_APP_URL, blob);
+  } else {
+    fetch(GAS_WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: data
+    });
+  }
+}  
+  
 </script>
 
 </body>
