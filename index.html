@@ -428,6 +428,23 @@ function shuffle(array) {
   return [...array].sort(() => Math.random() - 0.5);
 }
 
+function randomizeOptions(question) {
+  const optionObjects = question.options.map((text, index) => {
+    return {
+      text: text,
+      isCorrect: index === question.answer
+    };
+  });
+
+  const shuffledOptions = shuffle(optionObjects);
+
+  return {
+    ...question,
+    options: shuffledOptions.map(item => item.text),
+    answer: shuffledOptions.findIndex(item => item.isCorrect)
+  };
+}
+  
 window.addEventListener("load", function() {
   liffReadyPromise = initLiff();
 });
@@ -469,7 +486,9 @@ async function startGame() {
     await liffReadyPromise;
   }
 
-  questions = shuffle(questionBank).slice(0, QUESTION_COUNT);
+  questions = shuffle(questionBank)
+  .slice(0, QUESTION_COUNT)
+  .map(randomizeOptions);
 
   currentQuestion = 0;
   score = 0;
