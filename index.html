@@ -317,6 +317,14 @@
 
       <div id="resultText" class="result-text"></div>
 
+      <button class="primary" onclick="fakeLead()">
+  領取免費考情懶人包
+</button>
+
+<button class="secondary" onclick="restartGame()">
+  再玩一次
+</button>
+      
       <button class="primary" onclick="restartGame()">
         再玩一次
       </button>
@@ -1303,23 +1311,6 @@ function buildFiveQuestionSet(bank) {
   return selected.slice(0, QUESTION_COUNT).map(randomizeOptions);
 }
 
-function randomizeOptions(question) {
-  const optionObjects = question.options.map((text, index) => {
-    return {
-      text: text,
-      isCorrect: index === question.answer
-    };
-  });
-
-  const shuffledOptions = shuffle(optionObjects);
-
-  return {
-    ...question,
-    options: shuffledOptions.map(item => item.text),
-    answer: shuffledOptions.findIndex(item => item.isCorrect)
-  };
-}
-  
 window.addEventListener("load", function() {
   liffReadyPromise = initLiff();
 });
@@ -1608,6 +1599,10 @@ function sendResultToSheet(resultTitle, resultText) {
     .catch(function(error) {
       console.log("資料送出失敗：", error);
     });
+}
+
+function fakeLead(){
+  alert("正式版可導向：LINE 表單、考情資料領取頁、預約諮詢頁。");
 }
   
 </script>
