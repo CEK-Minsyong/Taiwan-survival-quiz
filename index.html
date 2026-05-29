@@ -354,7 +354,13 @@ let lineUser = {
 
 let answerLogs = [];
 let resultSent = false;
+let leadClickSent = false;
 let liffReadyPromise = null;
+let sessionId = "";
+
+function createSessionId() {
+  return Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+}
 
 const questionBank = [
 
@@ -1359,6 +1365,8 @@ questions = buildFiveQuestionSet(questionBank);
   timeLeft = TOTAL_TIME;
   answerLogs = [];
   resultSent = false;
+  leadClickSent = false;
+  sessionId = createSessionId();
 
   document.getElementById("startScreen").classList.add("hidden");
   document.getElementById("resultScreen").classList.add("hidden");
@@ -1550,19 +1558,21 @@ function restartGame(){
 function sendResultToSheet(resultTitle, resultText) {
   if (resultSent) return;
 
-  const payload = {
-    activityName: "台灣人生存測驗",
-    userName: lineUser.displayName,
-    userId: lineUser.userId,
-    score: score,
-    total: questions.length,
-    resultTitle: resultTitle,
-    resultText: resultText,
-    clickedLead: false,
-    source: "LIFF",
-    userAgent: navigator.userAgent,
-    answers: answerLogs
-  };
+const payload = {
+  eventType: "result",
+  sessionId: sessionId,
+  activityName: "台灣人生存測驗",
+  userName: lineUser.displayName,
+  userId: lineUser.userId,
+  score: score,
+  total: questions.length,
+  resultTitle: resultTitle,
+  resultText: resultText,
+  clickedLead: false,
+  source: "LIFF",
+  userAgent: navigator.userAgent,
+  answers: answerLogs
+};
 
   console.log("準備送出資料：", payload);
 
@@ -1604,14 +1614,63 @@ function sendResultToSheet(resultTitle, resultText) {
 function fakeLead(){
   const url = "https://www.cek.tw/5130/ckopsp-event-E20201204016";
 
+  sendLeadClickToSheet();
+
   if (typeof liff !== "undefined" && liff.isInClient()) {
     liff.openWindow({
       url: url,
       external: true
     });
   } else {
-    window.location.href = url;
+    window.open(url, "_blank", "noopener,noreferrer");
   }
+}
+
+function sendLeadClickToSheet() {
+  if (leadClickSent) return;
+  leadClickSent = true;
+
+  const payload = {
+    eventType: "leadClick",
+    sessionId: sessionId,
+    activityName: "台灣人生存測驗",
+    userName: lineUser.displayName,
+    userId: lineUser.userId,
+    clickedLead: true,
+    source: "LIFF",
+    userAgent: navigator.userAgent
+  };
+
+  console.log("準備送出懶人包點擊紀錄：", payload);
+
+  const data = JSON.stringify(payload);
+
+  function sendByFetch() {
+    return fetch(GAS_WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: data
+    });
+  }
+
+  if (navigator.sendBeacon) {
+    const blob = new Blob([data], {
+      type: "text/plain;charset=utf-8"
+    });
+
+    const beaconSuccess = navigator.sendBeacon(GAS_WEB_APP_URL, blob);
+
+    if (beaconSuccess) {
+      return;
+    }
+  }
+
+  sendByFetch().catch(function(error) {
+    console.log("懶人包點擊紀錄送出失敗：", error);
+  });
 }
   
 </script>
