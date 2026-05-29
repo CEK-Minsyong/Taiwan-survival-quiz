@@ -1435,6 +1435,25 @@ function renderQuestion(){
 
 }
 
+function scrollToAnswerBottom() {
+  setTimeout(function() {
+    const nextBtn = document.getElementById("nextBtn");
+    const feedback = document.getElementById("feedback");
+
+    if (nextBtn && !nextBtn.classList.contains("hidden")) {
+      nextBtn.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    } else if (feedback) {
+      feedback.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    }
+  }, 150);
+}
+  
 function selectAnswer(index,btn){
 
   if(answered) return;
@@ -1485,15 +1504,19 @@ const allButtons = document.querySelectorAll(".option");
 
   }
 
-  if(currentQuestion < questions.length - 1){
+if(currentQuestion < questions.length - 1){
 
-    document.getElementById("nextBtn").classList.remove("hidden");
+  document.getElementById("nextBtn").classList.remove("hidden");
 
-  }else{
+  scrollToAnswerBottom();
 
-    setTimeout(showResult,1000);
+}else{
 
-  }
+  scrollToAnswerBottom();
+
+  setTimeout(showResult,1000);
+
+}
 
 }
 
