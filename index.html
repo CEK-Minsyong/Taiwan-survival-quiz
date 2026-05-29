@@ -1602,7 +1602,16 @@ function sendResultToSheet(resultTitle, resultText) {
 }
 
 function fakeLead(){
-  alert("正式版可導向：LINE 表單、考情資料領取頁、預約諮詢頁。");
+  const url = "https://www.cek.tw/5130/ckopsp-event-E20201204016";
+
+  if (typeof liff !== "undefined" && liff.isInClient()) {
+    liff.openWindow({
+      url: url,
+      external: true
+    });
+  } else {
+    window.location.href = url;
+  }
 }
   
 </script>
